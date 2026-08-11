@@ -93,3 +93,7 @@ Ejecutar
 Deshacer
 
     $ npm run db:rollback
+
+# StreamLit
+
+    $ streamlit run chatbot.py
