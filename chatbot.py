@@ -8,6 +8,10 @@ st.set_page_config(page_title="Chatbot con LangChain y Ollama", page_icon="🤖"
 st.title("🤖 Chatbot con LangChain y Ollama")
 st.markdown("Este es un chatbot simple construido con LangChain y Ollama.")
 
+if st.button(" Nueva conversación: "):
+  st.session_state.messages = []
+  st.rerun()
+
 models = ['deepseek-r1:1.5b', 'deepseek-r1', 'llama3.2', 'qwen3:4b',]
 
 with st.sidebar:
@@ -18,7 +22,7 @@ with st.sidebar:
   llm = ChatOllama(model=model_name,temperature=temperature)
 
 # crear prompt template
-prompt_template = PromptTemplate(
+template = PromptTemplate(
   input_variables=["prompt", "historial"],
   template="""Eres un asistente ùtil y amigable llamado ChatBrot
 Historial de conversación:
@@ -43,13 +47,12 @@ for message in st.session_state.messages:
   with st.chat_message(role):
     st.markdown(message.content)
 
-if st.button(" Nueva conversación: "):
-  st.session_state.messages = []
-  st.rerun()
-
 # cuadro de entrada de texto
 prompt = st.chat_input("Escribe tu mensaje: ")
 
+chain = template | llm # LLMChain(llm=llm, prompt=template)
+
+# generar respuesta del asistente
 if prompt:
   # agregar mensaje del usuario al historial
   st.session_state.messages.append(HumanMessage(content=prompt))
@@ -58,18 +61,20 @@ if prompt:
   with st.chat_message("user"):
     st.markdown(prompt)
 
-   
+  try:
+    # para mostrar la respuesta de mana progresiva
+    with st.chat_message("assistant"):
+      response_placeholder = st.empty()
+      full_response = "" 
 
-  # generar respuesta del asistente
-  response = llm.invoke(
-    st.session_state.messages
-  )
+      # respuesta streamlit
+      for chunk in chain.stream({"prompt": prompt, "historial": st.session_state.messages}):
+        full_response += chunk.content
+        response_placeholder.markdown(full_response + "| ")
 
-  # agregar respuesta del asistente al historial
-  st.session_state.messages.append(
-    AIMessage(content=response.content)
-  )
+      response_placeholder.markdown(full_response)
 
-  # mostrar respuesta del asistente en la interfaz
-  with st.chat_message("assistant"):
-    st.markdown(response.content)
+    st.session_state.messages.append(AIMessage(content=full_response))
+  except Exception as e:
+    st.error(f"Error al generar respuestas: {str(e)}")
+    st.info("Verificar la conexión con el LLM")
