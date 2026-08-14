@@ -67,7 +67,7 @@ if prompt:
       response_placeholder = st.empty()
       full_response = "" 
 
-      # respuesta streamlit
+      # respuesta streamlit como chunks
       for chunk in chain.stream({"prompt": prompt, "historial": st.session_state.messages}):
         full_response += chunk.content
         response_placeholder.markdown(full_response + "| ")
