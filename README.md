@@ -97,3 +97,7 @@ Deshacer
 # StreamLit
 
     $ streamlit run chatbot.py
+
+# Embeddings
+
+    $ ollama pull embeddinggemma
