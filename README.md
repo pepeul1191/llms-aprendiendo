@@ -101,3 +101,9 @@ Deshacer
 # Embeddings
 
     $ ollama pull embeddinggemma
+
+# Usar el nuevo ollama
+
+    $ sudo snap stop ollama
+    $ sudo systemctl enable --now ollama
+    $ ollama --version

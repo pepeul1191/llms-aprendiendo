@@ -4,15 +4,19 @@ from models.cv_model import AnalisisCV
 from prompts.cv_prompts import crear_sistema_prompts
 from langchain_ollama import ChatOllama
 
-models = ["deepseek-r1:1.5b", "deepseek-r1", "llama3.2",  "qwen3:4b"]
+models = ["deepseek-r1:7b", "deepseek-r1", "llama3.2",  "qwen3:4b"]
 
 def crear_evaluador_cv():
-  llm = ChatOllama(model=models[0], temperature=0.2)
-
+  llm = ChatOllama(
+        model=models[2],
+        temperature=0.2,
+        num_ctx=2048,
+        num_gpu=99,
+        verbose=True,
+    )
   modelo_estructurado = llm.with_structured_output(AnalisisCV)
   chat_prompt = crear_sistema_prompts()
   cadena_evaluacion = chat_prompt | modelo_estructurado
-
   return cadena_evaluacion
 
 def evaluar_candidato(texto_cv: str, descripcion_puesto: str) -> AnalisisCV:
@@ -27,6 +31,8 @@ def evaluar_candidato(texto_cv: str, descripcion_puesto: str) -> AnalisisCV:
     return resultado
 
   except Exception as e:
+    import traceback
+    traceback.print_exc()
     return AnalisisCV(
       nombre_candidato="Error en procesamiento",
       experiencia_años=0,

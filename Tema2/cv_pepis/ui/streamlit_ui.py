@@ -165,7 +165,7 @@ def procesar_analisis(archivo_cv, descripcion_puesto):
 
 def mostrar_resultados(resultado: AnalisisCV):
     """Muestra los resultados del análisis de manera estructurada y profesional"""
-    
+    print(resultado)
     st.subheader("🎯 Evaluación Principal")
     
     if resultado.porcentaje_ajuste >= 80:
