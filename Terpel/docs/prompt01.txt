@@ -1,0 +1,456 @@
+# models/cv_model.py
+from pydantic import BaseModel, Field
+
+class AnalisisCV(BaseModel):
+  nombre_candidato: str = Field(description="Nombre completo extraìdo del cv.")
+  experiencia_años: int = Field(description="Años totales de experiencia laboral relevante.")
+  habilidades_clave: list[str] = Field(description="Lista de las 5 a 7 hablidades del candidato para el puesto")
+  education: str = Field(description="Nivel educativo más alto y especializado el postulante")
+  experiencia_relevante: str = Field(description="Resumen conciso de la expericencia más relevante para el puesto específico")
+  fortalezas: list[str] = Field(description="3-5 principales fortalezas del candidato basadas en su perfil")
+  areas_mejora: list[str] = Field(description="2-4 áreas donde el cantidado podría mejorar")
+  porcentaje_ajuste: int = Field(description="Porcentaje de ajusto al puesto (0-100) basado en experiencia, habilidades y fomración.", ge=0, le=100)
+
+# prompts/cv_prompts.py
+from langchain_core.prompts import ChatPromptTemplate, SystemMessagePromptTemplate, HumanMessagePromptTemplate
+
+# Prompt del sistema - Define el rol y criterios del reclutador experto
+SISTEMA_PROMPT = SystemMessagePromptTemplate.from_template(
+    """Eres un experto reclutador senior con 15 años de experiencia en selección de talento tecnológico. 
+    Tu especialidad es analizar currículums y evaluar candidatos de manera objetiva, profesional y constructiva.
+    
+    CRITERIOS DE EVALUACIÓN:
+    - Experiencia laboral relevante y progresión profesional
+    - Habilidades técnicas y competencias específicas
+    - Formación académica, certificaciones y educación continua
+    - Coherencia y estabilidad en la trayectoria profesional
+    - Potencial de crecimiento y adaptabilidad
+    - Ajuste cultural y técnico al puesto específico
+    
+    ENFOQUE:
+    - Mantén siempre un enfoque constructivo y profesional
+    - Sé específico en tus observaciones
+    - Considera tanto fortalezas como áreas de desarrollo
+    - Proporciona evaluaciones realistas y justificadas
+    - Enfócate en la relevancia para el puesto específico"""
+)
+
+# Prompt de análisis - Instrucciones específicas para evaluar el CV
+ANALISIS_PROMPT = HumanMessagePromptTemplate.from_template(
+    """Analiza el siguiente currículum y evalúa qué tan bien se ajusta al puesto descrito. 
+    Proporciona un análisis detallado, objetivo y profesional.
+
+**DESCRIPCIÓN DEL PUESTO A CUBRIR:**
+{descripcion_puesto}
+
+**CURRÍCULUM VITAE DEL CANDIDATO:**
+{texto_cv}
+
+**INSTRUCCIONES ESPECÍFICAS:**
+1. Extrae información clave del candidato (nombre, experiencia, educación)
+2. Identifica habilidades técnicas relevantes para este puesto específico
+3. Evalúa la experiencia laboral en relación a los requisitos
+4. Determina fortalezas principales del candidato
+5. Identifica áreas de mejora o desarrollo necesarias
+6. Asigna un porcentaje de ajuste realista (0-100) considerando:
+   - Experiencia relevante (40% del peso)
+   - Habilidades técnicas (35% del peso)
+   - Formación y certificaciones (15% del peso)
+   - Coherencia profesional (10% del peso)
+
+Sé preciso, objetivo y constructivo en tu análisis."""
+)
+
+# Prompt completo combinado - Listo para usar
+CHAT_PROMPT = ChatPromptTemplate.from_messages([
+    SISTEMA_PROMPT,
+    ANALISIS_PROMPT
+])
+
+def crear_sistema_prompts():
+    """Crea el sistema de prompts especializado para análisis de CVs"""
+    return CHAT_PROMPT
+
+# services/cv_evaluator.py
+from enum import Enum
+
+from models.cv_model import AnalisisCV
+from prompts.cv_prompts import crear_sistema_prompts
+from langchain_ollama import ChatOllama
+
+models = ["deepseek-r1:7b", "deepseek-r1", "llama3.2",  "qwen3:4b"]
+
+def crear_evaluador_cv():
+  llm = ChatOllama(
+        model=models[2],
+        temperature=0.2,
+        num_ctx=2048,
+        num_gpu=99,
+        verbose=True,
+    )
+  modelo_estructurado = llm.with_structured_output(AnalisisCV)
+  chat_prompt = crear_sistema_prompts()
+  cadena_evaluacion = chat_prompt | modelo_estructurado
+  return cadena_evaluacion
+
+def evaluar_candidato(texto_cv: str, descripcion_puesto: str) -> AnalisisCV:
+  try:
+    cadena_evaluacion = crear_evaluador_cv()
+
+    resultado = cadena_evaluacion.invoke({
+      "texto_cv": texto_cv,
+      "descripcion_puesto": descripcion_puesto
+    })
+
+    return resultado
+
+  except Exception as e:
+    import traceback
+    traceback.print_exc()
+    return AnalisisCV(
+      nombre_candidato="Error en procesamiento",
+      experiencia_años=0,
+      habilidades_clave=["Error al procesar CV"],
+      education="No se puede determinar",
+      experiencia_relevante="Error durante el análisis",
+      fortalezas=["Requiere revisión manual del CV"],
+      areas_mejora=["Verificar formato y legibilidad del PDF"],
+      porcentaje_ajuste=0
+    )
+
+
+# services/pdf_processor.py
+import PyPDF2
+from io import BytesIO
+
+def extraer_texto_pdf(archivo_pdf):
+  try:
+    pdf_reader = PyPDF2.PdfReader(BytesIO(archivo_pdf.read()))
+    texto_completo = ""
+
+    for numero_pagina, pagina in enumerate(pdf_reader.pages, 1):
+      texto_pagina = pagina.extract_text()
+      if texto_pagina.strip():
+        #texto_completo = texto_completo + texto_pagina
+        texto_completo += f"\n--- PÁGINA {numero_pagina} ---\n"
+        texto_completo += texto_pagina + "\n"
+
+    texto_completo = texto_completo.strip()
+
+    if not texto_completo:
+      return "Error: El PDF parece estar vácio o contener sólo imágenes"
+
+    return texto_completo
+
+  except Exception as e:
+    return f"Error al procesar el archivo PDF: {str(e)}"
+
+# ui/streamlit_ui.py
+import streamlit as st
+from models.cv_model import AnalisisCV
+from services.pdf_processor import extraer_texto_pdf
+from services.cv_evaluator import evaluar_candidato
+
+def main():
+    """Función principal que define la interfaz de usuario de Streamlit"""
+    
+    st.set_page_config(
+        page_title="Sistema de Evaluación de CVs",
+        page_icon="📄",
+        layout="wide",
+        initial_sidebar_state="expanded"
+    )
+    
+    st.title("📄 Sistema de Evaluación de CVs con IA")
+    st.markdown("""
+    **Analiza currículums y evalúa candidatos de manera objetiva usando IA**
+    
+    Este sistema utiliza inteligencia artificial para:
+    - Extraer información clave de currículums en PDF
+    - Analizar la experiencia y habilidades del candidato
+    - Evaluar el ajuste al puesto específico
+    - Proporcionar recomendaciones objetivas de contratación
+    """)
+    
+    st.divider()
+    
+    col_entrada, col_resultado = st.columns([1, 1], gap="large")
+    
+    with col_entrada:
+        procesar_entrada()
+    
+    with col_resultado:
+        mostrar_area_resultados()
+
+def procesar_entrada():
+    """Maneja la entrada de datos del usuario"""
+    
+    st.header("📋 Datos de Entrada")
+    
+    archivo_cv = st.file_uploader(
+        "**1. Sube el CV del candidato (PDF)**",
+        type=['pdf'],
+        help="Selecciona un archivo PDF que contenga el currículum a evaluar. Asegúrate de que el texto sea legible y no esté en formato de imagen."
+    )
+    
+    if archivo_cv is not None:
+        st.success(f"✅ Archivo cargado: {archivo_cv.name}")
+        st.info(f"📊 Tamaño: {archivo_cv.size:,} bytes")
+    
+    st.markdown("---")
+    
+    st.markdown("**2. Descripción del puesto de trabajo**")
+    descripcion_puesto = st.text_area(
+        "Detalla los requisitos, responsabilidades y habilidades necesarias:",
+        height=250,
+        placeholder="""Ejemplo detallado:
+
+**Puesto:** Desarrollador Frontend Senior
+
+**Requisitos obligatorios:**
+- 3+ años de experiencia en desarrollo frontend
+- Dominio de React.js y JavaScript/TypeScript
+- Experiencia con HTML5, CSS3 y frameworks CSS (Bootstrap, Tailwind)
+- Conocimiento de herramientas de build (Webpack, Vite)
+
+**Requisitos deseables:**
+- Experiencia con Next.js o similares
+- Conocimientos de testing (Jest, Cypress)
+- Familiaridad con metodologías ágiles
+- Inglés intermedio-avanzado
+
+**Responsabilidades:**
+- Desarrollo de interfaces de usuario responsivas
+- Colaboración con equipos de diseño y backend
+- Optimización de rendimiento de aplicaciones web
+- Mantenimiento de código legacy""",
+        help="Sé específico sobre requisitos técnicos, experiencia requerida y responsabilidades del puesto."
+    )
+    
+    st.markdown("---")
+    
+    col_btn1, col_btn2 = st.columns([1, 1])
+    
+    with col_btn1:
+        analizar = st.button(
+            "🔍 Analizar Candidato", 
+            type="primary",
+            use_container_width=True
+        )
+    
+    with col_btn2:
+        if st.button("🗑️ Limpiar", use_container_width=True):
+            st.rerun()
+    
+    st.session_state['archivo_cv'] = archivo_cv
+    st.session_state['descripcion_puesto'] = descripcion_puesto
+    st.session_state['analizar'] = analizar
+
+def mostrar_area_resultados():
+    """Muestra el área de resultados del análisis"""
+    
+    st.header("📊 Resultado del Análisis")
+    
+    if st.session_state.get('analizar', False):
+        archivo_cv = st.session_state.get('archivo_cv')
+        descripcion_puesto = st.session_state.get('descripcion_puesto', '').strip()
+        
+        if archivo_cv is None:
+            st.error("⚠️ Por favor sube un archivo PDF con el currículum")
+            return
+            
+        if not descripcion_puesto:
+            st.error("⚠️ Por favor proporciona una descripción detallada del puesto")
+            return
+        
+        procesar_analisis(archivo_cv, descripcion_puesto)
+    else:
+        st.info("""
+        👆 **Instrucciones:**
+        
+        1. Sube un CV en formato PDF en la columna izquierda
+        2. Describe detalladamente el puesto de trabajo
+        3. Haz clic en "Analizar Candidato"
+        4. Aquí aparecerá el análisis completo del candidato
+        
+        **Consejos para mejores resultados:**
+        - Usa CVs con texto seleccionable (no imágenes escaneadas)
+        - Sé específico en la descripción del puesto
+        - Incluye tanto requisitos obligatorios como deseables
+        """)
+
+def procesar_analisis(archivo_cv, descripcion_puesto):
+    """Procesa el análisis completo del CV"""
+    
+    with st.spinner("🔄 Procesando currículum..."):
+        progress_bar = st.progress(0)
+        status_text = st.empty()
+        
+        status_text.text("📄 Extrayendo texto del PDF...")
+        progress_bar.progress(25)
+        
+        texto_cv = extraer_texto_pdf(archivo_cv)
+        
+        if texto_cv.startswith("Error"):
+            st.error(f"❌ {texto_cv}")
+            return
+        
+        status_text.text("🤖 Preparando análisis con IA...")
+        progress_bar.progress(50)
+        
+        status_text.text("📊 Analizando candidato...")
+        progress_bar.progress(75)
+        
+        resultado = evaluar_candidato(texto_cv, descripcion_puesto)
+        
+        status_text.text("✅ Análisis completado")
+        progress_bar.progress(100)
+        
+        progress_bar.empty()
+        status_text.empty()
+        
+        mostrar_resultados(resultado)
+
+def mostrar_resultados(resultado: AnalisisCV):
+    """Muestra los resultados del análisis de manera estructurada y profesional"""
+    print(resultado)
+    st.subheader("🎯 Evaluación Principal")
+    
+    if resultado.porcentaje_ajuste >= 80:
+        color = "🟢"
+        nivel = "EXCELENTE"
+        mensaje = "Candidato altamente recomendado"
+    elif resultado.porcentaje_ajuste >= 60:
+        color = "🟡"
+        nivel = "BUENO"
+        mensaje = "Candidato recomendado con reservas"
+    elif resultado.porcentaje_ajuste >= 40:
+        color = "🟠"
+        nivel = "REGULAR"
+        mensaje = "Candidato requiere evaluación adicional"
+    else:
+        color = "🔴"
+        nivel = "BAJO"
+        mensaje = "Candidato no recomendado"
+    
+    col1, col2, col3 = st.columns([1, 2, 1])
+    with col2:
+        st.metric(
+            label="Porcentaje de Ajuste al Puesto",
+            value=f"{resultado.porcentaje_ajuste}%",
+            delta=f"{color} {nivel}"
+        )
+        st.markdown(f"**{mensaje}**")
+    
+    st.divider()
+    
+    st.subheader("👤 Perfil del Candidato")
+    
+    col1, col2 = st.columns(2)
+    with col1:
+        st.info(f"**👨‍💼 Nombre:** {resultado.nombre_candidato}")
+        st.info(f"**⏱️ Experiencia:** {resultado.experiencia_años} años")
+    
+    with col2:
+        st.info(f"**🎓 Educación:** {resultado.education}")
+    
+    st.subheader("💼 Experiencia Relevante")
+    st.info(f"📋 **Resumen de experiencia:**\n\n{resultado.experiencia_relevante}")
+    
+    st.divider()
+    
+    st.subheader("🛠️ Habilidades Técnicas Clave")
+    if resultado.habilidades_clave:
+        cols = st.columns(min(len(resultado.habilidades_clave), 4))
+        for i, habilidad in enumerate(resultado.habilidades_clave):
+            with cols[i % 4]:
+                st.success(f"✅ {habilidad}")
+    else:
+        st.warning("No se identificaron habilidades técnicas específicas")
+    
+    st.divider()
+    
+    col_fortalezas, col_mejoras = st.columns(2)
+    
+    with col_fortalezas:
+        st.subheader("💪 Fortalezas Principales")
+        if resultado.fortalezas:
+            for i, fortaleza in enumerate(resultado.fortalezas, 1):
+                st.markdown(f"**{i}.** {fortaleza}")
+        else:
+            st.info("No se identificaron fortalezas específicas")
+    
+    with col_mejoras:
+        st.subheader("📈 Áreas de Desarrollo")
+        if resultado.areas_mejora:
+            for i, area in enumerate(resultado.areas_mejora, 1):
+                st.markdown(f"**{i}.** {area}")
+        else:
+            st.info("No se identificaron áreas de mejora específicas")
+    
+    st.divider()
+    
+    st.subheader("📋 Recomendación Final")
+    
+    if resultado.porcentaje_ajuste >= 70:
+        st.success("""
+        ✅ **CANDIDATO RECOMENDADO**
+        
+        El perfil del candidato está bien alineado con los requisitos del puesto. 
+        Se recomienda proceder con las siguientes etapas del proceso de selección.
+        """)
+    elif resultado.porcentaje_ajuste >= 50:
+        st.warning("""
+        ⚠️ **CANDIDATO CON POTENCIAL**
+        
+        El candidato muestra potencial pero requiere evaluación adicional. 
+        Se recomienda una entrevista técnica para validar competencias específicas.
+        """)
+    else:
+        st.error("""
+        ❌ **CANDIDATO NO RECOMENDADO**
+        
+        El perfil no se alinea suficientemente con los requisitos del puesto. 
+        Se recomienda continuar la búsqueda de candidatos más adecuados.
+        """)
+    
+    st.markdown("---")
+    col1, col2, col3 = st.columns([1, 2, 1])
+    with col2:
+        if st.button("💾 Guardar Análisis", use_container_width=True):
+            st.info("Funcionalidad de guardado - En desarrollo")
+
+# app.py
+import streamlit as st
+from ui.streamlit_ui import main
+
+if __name__ == "__main__":
+  main()
+
+
+# requirements.txt
+langchain==0.3.*
+langchain-ollama
+streamlit
+streamlit-local-storage
+pyPDF2
+langchain-community
+pypdf
+beautifulsoup4
+google-api-python-client
+google-auth-httplib2
+google-auth-oauthlib
+
+basate en esta aplicacion para hacer una que tenga las siguientes caracteristicas:
+
+- tenga la opcion de cambiar a modo oscuro modo claro en el navbar
+- en el navbar salga el nombre de la aplicacion como una figura
+- un sidebar con 3 conversaciones (la información de esta conversacion sea nombre de mauquina, modelo y codigo)
+- al hacer click se podrá visualizar la conversación con el llm, esta conversacion deberá permitir adjuntar pdfs y csvs
+- cada conversacion consultará solo a los pdfs de la convresacion y csvs de la conversacion
+- a medida que avanza la conversacion podre adjuntar mas pdfs o csvs
+- se debe de guardar el historial de conversaión en una base de datos sqlite3 (usa sqalchemy), una sola tabla
+- el resultado de los prompts, en caso que el usuario lo pida, podran ser graficos basados en los datos ingestados
+- cuando cargue una conversacion, se deberá cargar lo que ya habia en la db sobre esa conversacion
+- no uses migraciones para crear la tabla sql, dame es script 
+-

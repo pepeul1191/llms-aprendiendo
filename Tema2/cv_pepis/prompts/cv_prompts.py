@@ -1,3 +1,4 @@
+# prompts/cv_prompts.py
 from langchain_core.prompts import ChatPromptTemplate, SystemMessagePromptTemplate, HumanMessagePromptTemplate
 
 # Prompt del sistema - Define el rol y criterios del reclutador experto

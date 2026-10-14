@@ -1,3 +1,4 @@
+# ui/streamlit_ui.py
 import streamlit as st
 from models.cv_model import AnalisisCV
 from services.pdf_processor import extraer_texto_pdf

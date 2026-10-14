@@ -1,0 +1,272 @@
+\documentclass[12pt,a4paper]{article}
+
+% --- Codificación e idioma ---
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[spanish,es-tabla]{babel}
+
+% --- Diseño de página ---
+\usepackage{geometry}
+\geometry{margin=2.5cm}
+\usepackage{fancyhdr}
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{Manual de Mantenimiento}
+\fancyhead[R]{Motor Diésel de Camión}
+\fancyfoot[C]{\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+
+% --- Paquetes útiles ---
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{array}
+\usepackage{tabularx}
+\usepackage{enumitem}
+\usepackage{xcolor}
+\usepackage{hyperref}
+\hypersetup{
+    colorlinks=true,
+    linkcolor=blue,
+    urlcolor=blue,
+    citecolor=blue
+}
+\usepackage{titlesec}
+\titleformat{\section}{\Large\bfseries}{\thesection}{1em}{}
+\titleformat{\subsection}{\large\bfseries}{\thesubsection}{1em}{}
+
+% --- Datos del documento ---
+\title{\textbf{Documentación Técnica de Mantenimiento\\Motor Diésel de Camión}}
+\author{Departamento de Mantenimiento}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+\thispagestyle{empty}
+\newpage
+
+\tableofcontents
+\newpage
+
+\section{Introducción}
+Este documento establece los procedimientos, intervalos y especificaciones técnicas para el mantenimiento preventivo y correctivo de un motor diésel de camión. Su objetivo es garantizar la confiabilidad, seguridad y vida útil del equipo.
+
+\textbf{Nota:} Los valores entre corchetes \texttt{[ ]} deben ser sustituidos por los datos específicos del fabricante o del vehículo.
+
+\section{Seguridad}
+Antes de realizar cualquier intervención, observe las siguientes medidas:
+\begin{itemize}
+    \item Detenga el motor y espere a que se enfríe.
+    \item Desconecte el terminal negativo de la batería.
+    \item Use equipo de protección personal: guantes, gafas, calzado de seguridad.
+    \item No trabaje bajo un vehículo sostenido solo por el gato hidráulico.
+    \item Evite el contacto con aceite, combustible y refrigerante calientes.
+    \item Disponga los residuos según la normativa ambiental local.
+\end{itemize}
+
+\begin{quote}
+\textbf{Advertencia:} El sistema de inyección diésel trabaja a alta presión. No desconecte tuberías con el motor en marcha.
+\end{quote}
+
+\section{Especificaciones técnicas}
+\begin{table}[h!]
+\centering
+\caption{Ficha técnica del motor}
+\begin{tabular}{@{}p{6cm}p{8cm}@{}}
+\toprule
+\textbf{Parámetro} & \textbf{Valor / Descripción} \\
+\midrule
+Marca / Modelo & [Marca, modelo] \\
+Tipo & Diésel, 4 tiempos, inyección directa \\
+Cilindrada & [ ] cm\(^3\) \\
+Potencia máxima & [ ] kW a [ ] rpm \\
+Torque máximo & [ ] N·m a [ ] rpm \\
+Orden de encendido & [1-5-3-6-2-4] \\
+Relación de compresión & [ ]:1 \\
+Presión de compresión & [ ] bar \\
+Capacidad de aceite & [ ] L \\
+Especificación de aceite & [API CI-4 / ACEA E7, etc.] \\
+Capacidad de refrigerante & [ ] L \\
+Tipo de refrigerante & [G12, G13, etc.] \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Componentes principales}
+\begin{itemize}
+    \item Bloque y culata.
+    \item Sistema de lubricación: bomba, filtro, enfriador.
+    \item Sistema de combustible: bomba de inyección, inyectores, filtros.
+    \item Sistema de admisión y turboalimentación.
+    \item Sistema de escape y recirculación de gases (EGR).
+    \item Sistema de refrigeración: bomba, termostato, radiador.
+    \item Sistema eléctrico: alternador, motor de arranque, sensores.
+\end{itemize}
+
+\section{Programa de mantenimiento}
+\begin{longtable}{@{}p{2.2cm}p{5.5cm}p{2.8cm}p{2.8cm}@{}}
+\caption{Intervalos de mantenimiento recomendados} \\
+\toprule
+\textbf{Intervalo} & \textbf{Operación} & \textbf{Responsable} & \textbf{Observaciones} \\
+\midrule
+\endfirsthead
+\toprule
+\textbf{Intervalo} & \textbf{Operación} & \textbf{Responsable} & \textbf{Observaciones} \\
+\midrule
+\endhead
+\bottomrule
+\endfoot
+Diario & Revisar nivel de aceite, refrigerante y fugas. & Operador & Antes de arrancar. \\
+Diario & Revisar presión de neumáticos y luces. & Operador & -- \\
+Semanal & Drenar agua del filtro de combustible. & Operador & -- \\
+Cada 5.000 km & Cambiar aceite y filtro de aceite. & Taller & Según especificación. \\
+Cada 10.000 km & Cambiar filtro de combustible. & Taller & -- \\
+Cada 20.000 km & Revisar sistema de admisión y turbo. & Taller & -- \\
+Cada 40.000 km & Ajustar válvulas. & Taller & Motor frío. \\
+Cada 60.000 km & Cambiar refrigerante. & Taller & -- \\
+Cada 100.000 km & Revisar y calibrar inyectores. & Taller & Banco de pruebas. \\
+\end{longtable}
+
+\section{Procedimientos de mantenimiento}
+
+\subsection{Cambio de aceite y filtro}
+\begin{enumerate}[label=\arabic*.]
+    \item Calentar el motor a temperatura normal y detenerlo.
+    \item Colocar un recipiente bajo el tapón de drenaje.
+    \item Retirar el tapón y drenar el aceite completamente.
+    \item Reemplazar el filtro de aceite y lubricar la junta.
+    \item Colocar el tapón con arandela nueva. Par: [ ] N·m.
+    \item Rellenar con aceite nuevo hasta el nivel correcto.
+    \item Arrancar el motor, verificar fugas y presión de aceite.
+    \item Apagar, esperar y verificar nuevamente el nivel.
+\end{enumerate}
+
+\subsection{Cambio de filtros de combustible}
+\begin{enumerate}[label=\arabic*.]
+    \item Limpiar la zona alrededor del filtro.
+    \item Retirar el filtro usado y desecharlo.
+    \item Llenar el filtro nuevo con combustible limpio.
+    \item Lubricar la junta y montar el filtro. Par: [ ] N·m.
+    \item Purgar el sistema con la bomba manual.
+    \item Arrancar el motor y verificar fugas.
+\end{enumerate}
+
+\subsection{Revisión del sistema de refrigeración}
+\begin{enumerate}[label=\arabic*.]
+    \item Verificar nivel y estado del refrigerante.
+    \item Revisar mangueras, abrazaderas y radiador.
+    \item Comprobar funcionamiento del termostato.
+    \item Medir punto de congelación con refractómetro.
+    \item Cambiar refrigerante según intervalo.
+\end{enumerate}
+
+\subsection{Ajuste de válvulas}
+\begin{enumerate}[label=\arabic*.]
+    \item Motor frío y desconectado.
+    \item Retirar tapa de balancines.
+    \item Girar el cigüeñal hasta la marca de PMS.
+    \item Ajustar válvulas según orden de encendido.
+    \item Admisión: [ ] mm. Escape: [ ] mm.
+    \item Revisar y montar tapa con junta nueva.
+\end{enumerate}
+
+\subsection{Revisión de inyectores}
+\begin{enumerate}[label=\arabic*.]
+    \item Limpiar la zona de inyectores.
+    \item Retirar inyectores y enviar a banco de pruebas.
+    \item Verificar caudal, pulverización y presión de apertura.
+    \item Reemplazar juntas y tornillos si es necesario.
+    \item Montar con par de apriete: [ ] N·m.
+\end{enumerate}
+
+\subsection{Mantenimiento del turbocompresor}
+\begin{enumerate}[label=\arabic*.]
+    \item Revisar juego axial y radial del eje.
+    \item Verificar fugas de aceite en admisión y escape.
+    \item Comprobar presión de soplado.
+    \item Revisar mangueras y abrazaderas.
+    \item Cambiar aceite y filtro con mayor frecuencia si hay polvo.
+\end{enumerate}
+
+\section{Torques de apriete}
+\begin{table}[h!]
+\centering
+\caption{Valores de par recomendados}
+\begin{tabular}{@{}p{5cm}p{3cm}p{2.5cm}p{4cm}@{}}
+\toprule
+\textbf{Elemento} & \textbf{Par (N·m)} & \textbf{Ángulo} & \textbf{Notas} \\
+\midrule
+Tapón de drenaje de aceite & [ ] & -- & Arandela nueva. \\
+Filtro de aceite & [ ] & -- & Apretar a mano. \\
+Filtro de combustible & [ ] & -- & -- \\
+Tornillos de culata & [ ] & [ ]\(^\circ\) & Etapas. \\
+Inyectores & [ ] & -- & -- \\
+Bujías de precalentamiento & [ ] & -- & -- \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Diagnóstico de fallas}
+\begin{longtable}{@{}p{3.5cm}p{5cm}p{6cm}@{}}
+\caption{Guía de diagnóstico rápido} \\
+\toprule
+\textbf{Síntoma} & \textbf{Causa probable} & \textbf{Acción recomendada} \\
+\midrule
+\endfirsthead
+\toprule
+\textbf{Síntoma} & \textbf{Causa probable} & \textbf{Acción recomendada} \\
+\midrule
+\endhead
+\bottomrule
+\endfoot
+Motor no arranca & Batería descargada, falla de combustible & Revisar batería, purgar sistema. \\
+Humo negro excesivo & Filtro de aire sucio, inyectores defectuosos & Cambiar filtro, calibrar inyectores. \\
+Humo blanco & Refrigerante en cámara, inyectores & Revisar culata, empaques. \\
+Baja potencia & Turbo defectuoso, baja presión de combustible & Revisar turbo, filtros y bomba. \\
+Sobrecalentamiento & Termostato, radiador obstruido & Revisar refrigeración. \\
+Ruido anormal & Válvulas desajustadas, cojinetes & Ajustar válvulas, revisar motor. \\
+\end{longtable}
+
+\section{Registro de mantenimiento}
+\begin{tabularx}{\textwidth}{@{}l l l X l@{}}
+\toprule
+\textbf{Fecha} & \textbf{Km} & \textbf{Servicio} & \textbf{Observaciones} & \textbf{Firma} \\
+\midrule
+ & & & & \\
+ & & & & \\
+ & & & & \\
+ & & & & \\
+\bottomrule
+\end{tabularx}
+
+\section{Repuestos y consumibles}
+\begin{tabularx}{\textwidth}{@{}l X l l@{}}
+\toprule
+\textbf{Elemento} & \textbf{Descripción} & \textbf{Cantidad} & \textbf{Periodicidad} \\
+\midrule
+Filtro de aceite & [Referencia] & 1 & Cada 5.000 km \\
+Filtro de combustible & [Referencia] & 1 & Cada 10.000 km \\
+Filtro de aire & [Referencia] & 1 & Cada 20.000 km \\
+Aceite de motor & [Especificación] & [ ] L & Cada 5.000 km \\
+Refrigerante & [Especificación] & [ ] L & Cada 60.000 km \\
+\bottomrule
+\end{tabularx}
+
+\section{Glosario}
+\begin{description}
+    \item[EGR] Recirculación de gases de escape.
+    \item[TDC] Punto muerto superior.
+    \item[PMS] Punto muerto superior.
+    \item[Turbo] Turbocompresor.
+    \item[API] Instituto Americano del Petróleo.
+\end{description}
+
+\section{Referencias}
+\begin{thebibliography}{9}
+    \bibitem{manual} Manual del fabricante del motor. \textit{[Marca, modelo]}.
+    \bibitem{norma} Norma de mantenimiento preventivo de flotas.
+    \bibitem{seguridad} Reglamento de seguridad e higiene industrial.
+\end{thebibliography}
+
+\end{document}

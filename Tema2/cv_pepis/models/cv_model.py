@@ -1,3 +1,4 @@
+# models/cv_model.py
 from pydantic import BaseModel, Field
 
 class AnalisisCV(BaseModel):

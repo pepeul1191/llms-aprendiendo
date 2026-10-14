@@ -1,3 +1,4 @@
+# services/pdf_processor.py
 import PyPDF2
 from io import BytesIO
 
